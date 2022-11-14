@@ -1,3 +1,5 @@
+import numpy
+
 from BMEUI.BI123 import Ui_MainWindow # 导入UI文件
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -23,7 +25,7 @@ class Window(Ui_MainWindow, QMainWindow):
         self.ConfirmButton.clicked.connect(self.Confirm)
         self.SobelButton.clicked.connect(self.SobelFilter)
         self.MedianButton.clicked.connect(self.MedianFilter)
-
+        self.DilationButton.clicked.connect(self.Dilation)
 
     def initHist(self):
         pg.setConfigOption('background', 'w')
@@ -236,6 +238,41 @@ class Window(Ui_MainWindow, QMainWindow):
             self.processedImg = signal.convolve2d(gray, filter, mode='same', boundary='symm').astype(gray.dtype)
             print(self.processedImg.dtype)
             self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+    # Lab3:形态学处理 手写dilation//erosion
+    def Dilation(self):
+        # 首先应当存在初始图像
+        if(self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if(len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            # 系统处理的图像不全是二值图像,需要先转换为二值图像
+            binaryImg = gray.copy()
+            finalImg = gray.copy()
+            binaryImg[gray >= 128] = 255
+            binaryImg[gray < 128] = 0
+            numpy.pad(binaryImg, [(1, 1), (1, 1)], 'constant', constant_values = [(255, 255), (255, 255)])
+            kernal = np.array([
+                [0, 1, 0],
+                [1, 1, 1],
+                [0, 1, 0]
+            ])
+            height, width = binaryImg.shape
+            for i in range(height - 2):
+                for j in range(width - 2):
+                    slice = binaryImg[i:i+3, j:j+3]
+                    jud = kernal * slice
+                    if ((jud - kernal * 255).astype(gray.dtype).any()):
+                        finalImg[i][j] = 0
+                    else:
+                        finalImg[i][j] = 255
+            self.processedImg = finalImg.astype(gray.dtype)
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
