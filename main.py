@@ -31,6 +31,8 @@ class Window(Ui_MainWindow, QMainWindow):
         self.ClosingButton.clicked.connect(self.Closing)
         self.DistanceTransformButton.clicked.connect(self.DistanceTransform)
         self.SkeletonButton.clicked.connect(self.Skeleton)
+        self.SkeletonRestorationButton.clicked.connect(self.SkeletonRestoration)
+        self.actionExport_Image.triggered.connect(self.export_img)
 
     def initHist(self):
         pg.setConfigOption('background', 'w')
@@ -133,6 +135,8 @@ class Window(Ui_MainWindow, QMainWindow):
         self.originalImg = cv2.imread(filePath)
         self.print_img(self.originalImg, self.OriImg, self.pwOri)
 
+    def export_img(self):
+        cv2.imwrite('ExportImg.jpg', self.originalImg)
     # 确认操作(将处理后的图像保存为处理前的图像)
     def Confirm(self):
         if (self.originalImg is not None and self.processedImg is not None):
@@ -449,13 +453,56 @@ class Window(Ui_MainWindow, QMainWindow):
             else:
                 gray = self.originalImg
 
-            #二值化处理
-            binaryImg = gray.copy()
-            binaryImg[gray >= 128] = 1
-            binaryImg[gray < 128] = 0
-            skeleton0 = morphology.skeletonize(binaryImg)
-            self.processedImg = skeleton0.astype(np.uint8) * 255
+            ret, imgBin = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)  # 二值化处理
+
+            element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+            skeleton = np.zeros(imgBin.shape, np.uint8)  # 创建空骨架图
+            while True:
+                imgOpen = cv2.morphologyEx(imgBin, cv2.MORPH_OPEN, element)  # 开运算
+                subSkel = cv2.subtract(imgBin, imgOpen)  # 获得骨架子集
+                skeleton = cv2.bitwise_or(skeleton, subSkel)  # # 将删除的像素添加到骨架图
+                imgBin = cv2.erode(imgBin, element)  # 腐蚀，用于下一次迭代
+                if cv2.countNonZero(imgBin) == 0:
+                    break
+
+            self.processedImg = skeleton * 255 * 255
+            print(self.processedImg)
             self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+    def SkeletonRestoration(self):
+        # 首先应当存在初始图像
+        if(self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if(len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            ret, imgBin = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)  # 二值化处理
+
+            element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+            skeleton = np.zeros(imgBin.shape, np.uint8)  # 创建空骨架图
+            skeletonRestoration = np.zeros(imgBin.shape, np.uint8)
+            subSkelLine = [] # 用于存放S_i
+            while True:
+                imgOpen = cv2.morphologyEx(imgBin, cv2.MORPH_OPEN, element)  # 开运算
+                subSkel = cv2.subtract(imgBin, imgOpen)  # 获得骨架子集
+                subSkelLine.append(subSkel)
+                skeleton = cv2.bitwise_or(skeleton, subSkel)  # # 将删除的像素添加到骨架图
+                imgBin = cv2.erode(imgBin, element)  # 腐蚀，用于下一次迭代
+                if cv2.countNonZero(imgBin) == 0:
+                    break
+
+            i = 0
+            for oneSubSkel in subSkelLine:
+                i += 1
+                imgDilation = cv2.dilate(oneSubSkel, element, iterations= i)
+                skeletonRestoration = cv2.bitwise_or(skeletonRestoration, imgDilation)
+
+            self.processedImg = skeletonRestoration * 255 * 255
+            print(self.processedImg)
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
 
 
 if __name__ == '__main__':
