@@ -436,11 +436,10 @@ class Window(Ui_MainWindow, QMainWindow):
                 binaryImg = cv2.erode(binaryImg, kernal, iterations=1)
                 finalImg = finalImg + binaryImg
             self.processedImg = finalImg.astype(gray.dtype)
-            print(finalImg)
+
             # 在输出的时候映射阈值
             ImageForPrint = finalImg  / np.max(finalImg) * 255
             ImageForPrint = ImageForPrint.astype(gray.dtype)
-            print(ImageForPrint)
 
             self.print_img(ImageForPrint, self.ProImg, self.pwPro)
 
@@ -466,7 +465,6 @@ class Window(Ui_MainWindow, QMainWindow):
                     break
 
             self.processedImg = skeleton * 255 * 255
-            print(self.processedImg)
             self.print_img(self.processedImg, self.ProImg, self.pwPro)
 
     def SkeletonRestoration(self):
@@ -500,7 +498,6 @@ class Window(Ui_MainWindow, QMainWindow):
                 skeletonRestoration = cv2.bitwise_or(skeletonRestoration, imgDilation)
 
             self.processedImg = skeletonRestoration * 255 * 255
-            print(self.processedImg)
             self.print_img(self.processedImg, self.ProImg, self.pwPro)
 
 
