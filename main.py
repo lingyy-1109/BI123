@@ -10,7 +10,7 @@ import cv2
 import pyqtgraph as pg
 import math
 from scipy import signal
-
+from skimage import morphology
 class Window(Ui_MainWindow, QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
@@ -29,6 +29,8 @@ class Window(Ui_MainWindow, QMainWindow):
         self.ErosionButton.clicked.connect(self.Erosion)
         self.OpeningButton.clicked.connect(self.Opening)
         self.ClosingButton.clicked.connect(self.Closing)
+        self.DistanceTransformButton.clicked.connect(self.DistanceTransform)
+        self.SkeletonButton.clicked.connect(self.Skeleton)
 
     def initHist(self):
         pg.setConfigOption('background', 'w')
@@ -328,7 +330,7 @@ class Window(Ui_MainWindow, QMainWindow):
                 [0, 1, 0]
             ])
             # Dilation
-            numpy.pad(binaryImg, [(1, 1), (1, 1)], 'constant',constant_values=[(255, 255),(255, 255)])
+            numpy.pad(binaryImg, [(1, 1), (1, 1)], 'constant', constant_values=[(255, 255),(255, 255)])
             height, width = binaryImg.shape
             for i in range(height - 2):
                 for j in range(width - 2):
@@ -397,6 +399,65 @@ class Window(Ui_MainWindow, QMainWindow):
                         finalImg[i][j] = 255
             self.processedImg = finalImg.astype(gray.dtype)
             self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+    # Lab4:其他处理算法
+    def DistanceTransform(self):
+        # 首先应当存在初始图像
+        if(self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if(len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            #二值化处理
+            binaryImg = gray.copy()
+            binaryImg[gray >= 128] = 1
+            binaryImg[gray < 128] = 0
+            finalImg = binaryImg.copy()
+
+            kernal = np.array([
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ])
+
+            #迭代求距离
+            print(np.all(binaryImg != 0))
+            while not np.all(binaryImg == 0):
+                # Dilation
+
+                numpy.pad(binaryImg, [(1, 1), (1, 1)], 'constant', constant_values=[(255, 255), (255, 255)])
+                height, width = binaryImg.shape
+                binaryImg = cv2.erode(binaryImg, kernal, iterations=1)
+                finalImg = finalImg + binaryImg
+            self.processedImg = finalImg.astype(gray.dtype)
+            print(finalImg)
+            # 在输出的时候映射阈值
+            ImageForPrint = finalImg  / np.max(finalImg) * 255
+            ImageForPrint = ImageForPrint.astype(gray.dtype)
+            print(ImageForPrint)
+
+            self.print_img(ImageForPrint, self.ProImg, self.pwPro)
+
+    def Skeleton(self):
+        # 首先应当存在初始图像
+        if(self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if(len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            #二值化处理
+            binaryImg = gray.copy()
+            binaryImg[gray >= 128] = 1
+            binaryImg[gray < 128] = 0
+            skeleton0 = morphology.skeletonize(binaryImg)
+            self.processedImg = skeleton0.astype(np.uint8) * 255
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mywindow = Window()
