@@ -1,7 +1,6 @@
 import numpy
 
 from BMEUI.BI123 import Ui_MainWindow # 导入UI文件
-from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import sys
@@ -10,7 +9,7 @@ import cv2
 import pyqtgraph as pg
 import math
 from scipy import signal
-from skimage import morphology
+
 class Window(Ui_MainWindow, QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
@@ -33,6 +32,14 @@ class Window(Ui_MainWindow, QMainWindow):
         self.SkeletonButton.clicked.connect(self.Skeleton)
         self.SkeletonRestorationButton.clicked.connect(self.SkeletonRestoration)
         self.actionExport_Image.triggered.connect(self.export_img)
+
+        self.EdgeDetectionButton.clicked.connect(self.EdgeDetection)
+        self.GDilationButton.clicked.connect(self.GDilation)
+        self.GErosionButton.clicked.connect(self.GErosion)
+        self.GOpeningButton.clicked.connect(self.GOpening)
+        self.GClosingButton.clicked.connect(self.GClosing)
+        self.MorphologicalGradientButton.clicked.connect(self.Gradient)
+        self.GReconstructionButton.clicked.connect(self.GReconstruction)
 
     def initHist(self):
         pg.setConfigOption('background', 'w')
@@ -263,16 +270,16 @@ class Window(Ui_MainWindow, QMainWindow):
             finalImg = gray.copy()
             binaryImg[gray >= 128] = 255
             binaryImg[gray < 128] = 0
-            numpy.pad(binaryImg, [(1, 1), (1, 1)], 'constant', constant_values = [(255, 255), (255, 255)])
+            src = cv2.copyMakeBorder(binaryImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
             kernal = np.array([
                 [0, 1, 0],
                 [1, 1, 1],
                 [0, 1, 0]
             ])
             height, width = binaryImg.shape
-            for i in range(height - 2):
-                for j in range(width - 2):
-                    slice = binaryImg[i:i+3, j:j+3]
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i+3, j:j+3]
                     jud = kernal * slice
                     if ((jud - kernal * 255).astype(gray.dtype).any()):
                         finalImg[i][j] = 0
@@ -295,16 +302,16 @@ class Window(Ui_MainWindow, QMainWindow):
             finalImg = gray.copy()
             binaryImg[gray >= 128] = 255
             binaryImg[gray < 128] = 0
-            numpy.pad(binaryImg, [(1, 1), (1, 1)], 'constant')
+            src = cv2.copyMakeBorder(binaryImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
             kernal = np.array([
                 [0, 1, 0],
                 [1, 1, 1],
                 [0, 1, 0]
             ])
             height, width = binaryImg.shape
-            for i in range(height - 2):
-                for j in range(width - 2):
-                    slice = binaryImg[i:i+3, j:j+3]
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i+3, j:j+3]
                     jud = kernal * slice
                     if ((jud).astype(gray.dtype).any()):
                         finalImg[i][j] = 255
@@ -334,22 +341,22 @@ class Window(Ui_MainWindow, QMainWindow):
                 [0, 1, 0]
             ])
             # Dilation
-            numpy.pad(binaryImg, [(1, 1), (1, 1)], 'constant', constant_values=[(255, 255),(255, 255)])
+            src = cv2.copyMakeBorder(binaryImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
             height, width = binaryImg.shape
-            for i in range(height - 2):
-                for j in range(width - 2):
-                    slice = binaryImg[i:i+3, j:j+3]
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i+3, j:j+3]
                     jud = kernal * slice
                     if ((jud - kernal * 255).astype(gray.dtype).any()):
                         tempImg[i][j] = 0
                     else:
                         tempImg[i][j] = 255
             # Erosion
-            numpy.pad(tempImg, [(1, 1), (1, 1)], 'constant')
+            src = cv2.copyMakeBorder(tempImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
             height, width = tempImg.shape
-            for i in range(height - 2):
-                for j in range(width - 2):
-                    slice = tempImg[i:i+3, j:j+3]
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i+3, j:j+3]
                     jud = kernal * slice
                     if ((jud).astype(gray.dtype).any()):
                         finalImg[i][j] = 255
@@ -380,22 +387,22 @@ class Window(Ui_MainWindow, QMainWindow):
             ])
 
             # Erosion
-            numpy.pad(binaryImg, [(1, 1), (1, 1)], 'constant')
+            src = cv2.copyMakeBorder(binaryImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
             height, width = binaryImg.shape
-            for i in range(height - 2):
-                for j in range(width - 2):
-                    slice = binaryImg[i:i+3, j:j+3]
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i+3, j:j+3]
                     jud = kernal * slice
                     if ((jud).astype(gray.dtype).any()):
                         tempImg[i][j] = 255
                     else:
                         tempImg[i][j] = 0
             # Dilation
-            numpy.pad(tempImg, [(1, 1), (1, 1)], 'constant',constant_values=[(255, 255),(255, 255)])
+            src = cv2.copyMakeBorder(tempImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
             height, width = tempImg.shape
-            for i in range(height - 2):
-                for j in range(width - 2):
-                    slice = tempImg[i:i+3, j:j+3]
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i+3, j:j+3]
                     jud = kernal * slice
                     if ((jud - kernal * 255).astype(gray.dtype).any()):
                         finalImg[i][j] = 0
@@ -500,7 +507,263 @@ class Window(Ui_MainWindow, QMainWindow):
             self.processedImg = skeletonRestoration * 255 * 255
             self.print_img(self.processedImg, self.ProImg, self.pwPro)
 
+    def EdgeDetection(self):
+        # 首先应当存在初始图像
+        if(self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if(len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
 
+            # 系统处理的图像不全是二值图像,需要先转换为二值图像
+            binaryImg = gray.copy()
+            tempImg = gray.copy()
+            finalImg = gray.copy()
+            binaryImg[gray >= 128] = 255
+            binaryImg[gray < 128] = 0
+
+            # Dilation
+            kernal = np.array([
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ])
+            src = cv2.copyMakeBorder(binaryImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = binaryImg.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i+3, j:j+3]
+                    jud = kernal * slice
+                    if (jud - kernal * 255).astype(gray.dtype).any():
+                        finalImg[i][j] = 0
+                    else:
+                        finalImg[i][j] = 255
+            self.processedImg = finalImg.astype(gray.dtype) - binaryImg
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+    def GDilation(self):
+        # 首先应当存在初始图像
+        if (self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if (len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            finalImg = gray.copy()
+            # Dilation
+            kernal = np.array([
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ])
+            src = cv2.copyMakeBorder(gray, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = kernal + slice
+                    finalImg[i][j] = jud.max()
+            self.processedImg = finalImg
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+    def GErosion(self):
+        # 首先应当存在初始图像
+        if (self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if (len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            finalImg = gray.copy()
+            # Erosion
+            kernal = np.array([
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ])
+            src = cv2.copyMakeBorder(gray, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = slice - kernal
+                    finalImg[i][j] = jud.min()
+            self.processedImg = finalImg
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+    def GOpening(self):
+        # 首先应当存在初始图像
+        if (self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if (len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            tempImg = gray.copy()
+            finalImg = gray.copy()
+            kernal = np.array([
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ])
+
+            # Erosion
+            src = cv2.copyMakeBorder(gray, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = slice - kernal
+                    tempImg[i][j] = jud.min()
+
+            # Dilation
+            src = cv2.copyMakeBorder(tempImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = kernal + slice
+                    finalImg[i][j] = jud.max()
+
+            self.processedImg = finalImg
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+    def GClosing(self):
+        # 首先应当存在初始图像
+        if (self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if (len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            tempImg = gray.copy()
+            finalImg = gray.copy()
+
+            kernal = np.array([
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ])
+
+            # Dilation
+            src = cv2.copyMakeBorder(gray, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = kernal + slice
+                    tempImg[i][j] = jud.max()
+
+            # Erosion
+            src = cv2.copyMakeBorder(tempImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = slice - kernal
+                    finalImg[i][j] = jud.min()
+
+            self.processedImg = finalImg
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+    def Gradient(self):
+        # 首先应当存在初始图像
+        if (self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if (len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            DilaImg = gray.copy()
+            EroImg = gray.copy()
+            finalImg = gray.copy()
+
+            kernal = np.array([
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ])
+
+            # Dilation
+            src = cv2.copyMakeBorder(gray, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = kernal + slice
+                    DilaImg[i][j] = jud.max()
+
+            # Erosion
+            src = cv2.copyMakeBorder(gray, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = slice - kernal
+                    EroImg[i][j] = jud.min()
+
+            self.processedImg = ((DilaImg - EroImg) / 2).astype(gray.dtype)
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
+
+    def GReconstruction(self):
+        # 首先应当存在初始图像
+        if (self.originalImg is not None):
+            # 判断图像为彩色图像还是灰度图像
+            if (len(self.originalImg.shape) == 3):
+                gray = cv2.cvtColor(self.originalImg, cv2.COLOR_BGR2GRAY)
+            else:
+                gray = self.originalImg
+
+            tempImg = gray.copy()
+            finalImg = gray.copy()
+            tempLine = []
+            tempLine.append(gray)
+            kernal = np.array([
+                [1, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1]
+            ])
+
+            # Erosion
+            src = cv2.copyMakeBorder(gray, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = slice - kernal
+                    tempImg[i][j] = jud.min()
+            # Dilation
+            src = cv2.copyMakeBorder(tempImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+            height, width = gray.shape
+            for i in range(height):
+                for j in range(width):
+                    slice = src[i:i + 3, j:j + 3]
+                    jud = kernal + slice
+                    tempImg[i][j] = jud.max()
+
+            # Conditional Dilation
+            while((tempImg - tempLine[-1]).astype(gray.dtype).any()):
+                tempLine.append(tempImg)
+                src = cv2.copyMakeBorder(tempImg, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+                height, width = gray.shape
+                for i in range(height):
+                    for j in range(width):
+                        slice = src[i:i + 3, j:j + 3]
+                        jud = kernal + slice
+                        tempImg[i][j] = max(jud.max(),gray[i][j])
+
+
+
+
+
+            self.processedImg = finalImg
+            self.print_img(self.processedImg, self.ProImg, self.pwPro)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

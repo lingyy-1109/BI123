@@ -111,7 +111,7 @@
       <item row="0" column="0">
        <widget class="QTabWidget" name="FunctionWidget">
         <property name="currentIndex">
-         <number>2</number>
+         <number>3</number>
         </property>
         <widget class="QWidget" name="tab_9">
          <attribute name="title">
@@ -453,21 +453,70 @@
               </property>
              </spacer>
             </item>
+            <item row="7" column="3">
+             <widget class="QPushButton" name="EdgeDetectionButton">
+              <property name="text">
+               <string>Edge Detection</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
         </widget>
         <widget class="QWidget" name="tab_12">
          <attribute name="title">
-          <string>其他</string>
+          <string>灰度级形态学</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_6">
-          <item row="0" column="0">
-           <layout class="QVBoxLayout" name="verticalLayout_4">
-            <item>
-             <widget class="QPushButton" name="pushButton_3">
+          <item row="1" column="0">
+           <layout class="QGridLayout" name="gridLayout_9">
+            <item row="1" column="0">
+             <widget class="QPushButton" name="GErosionButton">
               <property name="text">
-               <string>PushButton</string>
+               <string>Grayscale Erosion</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QPushButton" name="GClosingButton">
+              <property name="text">
+               <string>Grayscale Closing</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="GReconstructionButton">
+              <property name="text">
+               <string>Grayscale Reconstruction</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="GDilationButton">
+              <property name="text">
+               <string>Grayscale Dilation</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="GOpeningButton">
+              <property name="text">
+               <string>Grayscale Opening</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QPushButton" name="MorphologicalGradientButton">
+              <property name="text">
+               <string>Morphological Gradient</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QPushButton" name="ConditionalDilationButton">
+              <property name="text">
+               <string>Conditional Dilation</string>
               </property>
              </widget>
             </item>
